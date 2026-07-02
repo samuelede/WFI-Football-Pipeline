@@ -88,7 +88,7 @@ Accounts and access:
 
 1. Register at football-data.org and get a free API key.
 2. Create a Google Cloud Platform account and a new GCP project.
-3. Enable the BigQuery API and the Cloud Storage API on that project.
+3. Enable the BigQuery API and the Cloud Storage API on that project. Compute Engine API is not required for this setup, it's only needed if you pursue the optional cloud-deployment extension below.
 4. Create a GCS bucket named `wfi-football-raw-data`.
 5. Create three BigQuery datasets: `wfi_raw`, `wfi_staging`, `wfi_gold`.
 
@@ -227,7 +227,7 @@ Re-trigger `wfi_football_ingestion_dag` from scratch to simulate a fresh daily r
 - Add a fourth gold table, `gold_match_results`, with full match details sorted by date and the derived winner column.
 - Add email alerting through Airflow's `EmailOperator` when the daily run completes successfully.
 - Move `PROJECT_ID` out of the DAG files and into an Airflow connection instead.
-- Deploy Airflow to a GCP Compute Engine VM so the pipeline runs in the cloud rather than locally.
+- Deploy Airflow to a GCP Compute Engine VM so the pipeline runs in the cloud rather than locally. This requires enabling the Compute Engine API on the project, which isn't needed for the local Docker setup described above.
 - Add a data quality check that queries the staging table after load and fails the DAG if the row count drops below a threshold.
 
 ## Contributing
