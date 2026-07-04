@@ -51,7 +51,10 @@ with DAG(
         task_id="sense_matches_file",
         bucket=BUCKET_NAME,
         object="raw/worldcup_matches.ndjson",
-        gcp_conn_id=GCP_CONN_ID,
+        # Note: this sensor uses google_cloud_conn_id, NOT gcp_conn_id like most
+        # other Google provider operators (BigQueryInsertJobOperator, GCSToBigQueryOperator).
+        # This is a real inconsistency in the provider's own API, not a typo.
+        google_cloud_conn_id=GCP_CONN_ID,
         timeout=300,
         poke_interval=15,
     )
@@ -60,7 +63,7 @@ with DAG(
         task_id="sense_teams_file",
         bucket=BUCKET_NAME,
         object="raw/worldcup_teams.ndjson",
-        gcp_conn_id=GCP_CONN_ID,
+        google_cloud_conn_id=GCP_CONN_ID,
         timeout=300,
         poke_interval=15,
     )
@@ -69,7 +72,7 @@ with DAG(
         task_id="sense_standings_file",
         bucket=BUCKET_NAME,
         object="raw/worldcup_standings.ndjson",
-        gcp_conn_id=GCP_CONN_ID,
+        google_cloud_conn_id=GCP_CONN_ID,
         timeout=300,
         poke_interval=15,
     )
