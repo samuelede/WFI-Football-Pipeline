@@ -7,6 +7,12 @@ x-airflow-common: &airflow-common
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db/airflow
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/service_account.json
+    # BigQueryInsertJobOperator and GCSToBigQueryOperator look up an Airflow
+    # Connection object named "google_cloud_default" by default, this is separate
+    # from the GOOGLE_APPLICATION_CREDENTIALS env var above and won't exist unless
+    # declared here. With no key_path/keyfile_dict extra, the hook falls back to
+    # ADC, which picks up GOOGLE_APPLICATION_CREDENTIALS automatically.
+    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: "google-cloud-platform://?extra__google_cloud_platform__project=${GCP_PROJECT_ID}"
   volumes:
     - ./dags:/opt/airflow/dags
     - ./sql:/opt/airflow/sql
