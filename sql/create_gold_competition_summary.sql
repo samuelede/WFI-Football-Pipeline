@@ -1,13 +1,13 @@
 -- Reads stg_matches and produces one summary row per competition:
 -- total matches, total goals, average goals per match, draws and distinct teams.
 
-CREATE OR REPLACE TABLE `your-gcp-project-id.wfi_gold.gold_competition_summary` AS
+CREATE OR REPLACE TABLE `wfi-football-pipeline.wfi_gold.gold_competition_summary` AS
 WITH team_list AS (
   SELECT home_team AS team_name, competition_name
-  FROM `your-gcp-project-id.wfi_staging.stg_matches`
+  FROM `wfi-football-pipeline.wfi_staging.stg_matches`
   UNION DISTINCT
   SELECT away_team AS team_name, competition_name
-  FROM `your-gcp-project-id.wfi_staging.stg_matches`
+  FROM `wfi-football-pipeline.wfi_staging.stg_matches`
 )
 
 SELECT
@@ -21,5 +21,5 @@ SELECT
     FROM team_list t
     WHERE t.competition_name = m.competition_name
   ) AS unique_teams
-FROM `your-gcp-project-id.wfi_staging.stg_matches` m
+FROM `wfi-football-pipeline.wfi_staging.stg_matches` m
 GROUP BY m.competition_name;

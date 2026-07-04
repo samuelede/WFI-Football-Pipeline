@@ -1,7 +1,7 @@
 -- Reads wfi_raw.raw_matches and produces one clean row per finished match.
 -- Adds two derived columns that the gold layer depends on: match_winner and total_goals.
 
-CREATE OR REPLACE TABLE `your-gcp-project-id.wfi_staging.stg_matches` AS
+CREATE OR REPLACE TABLE `wfi-football-pipeline.wfi_staging.stg_matches` AS
 SELECT
   id AS match_id,
   utcDate AS match_date,
@@ -20,5 +20,5 @@ SELECT
     ELSE NULL
   END AS match_winner,
   competition.name AS competition_name
-FROM `your-gcp-project-id.wfi_raw.raw_matches`
+FROM `wfi-football-pipeline.wfi_raw.raw_matches`
 WHERE status = 'FINISHED';

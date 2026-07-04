@@ -5,7 +5,7 @@ from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 # Update this value to match your GCP project before running the DAG
-PROJECT_ID = "your-gcp-project-id"
+PROJECT_ID = "wfi-football-pipeline"
 GCP_CONN_ID = "google_cloud_default"
 SQL_DIR = os.path.join(os.path.dirname(__file__), "..", "sql")
 

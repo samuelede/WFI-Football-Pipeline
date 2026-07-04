@@ -15,7 +15,7 @@ from extract_football_data import run_extraction
 from gcs_upload import run_upload
 
 # Update these two values to match your GCP project before running the DAG
-PROJECT_ID = "your-gcp-project-id"
+PROJECT_ID = "wfi-football-pipeline"
 BUCKET_NAME = "wfi-football-raw-data"
 
 RAW_DATASET = "wfi_raw"

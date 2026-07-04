@@ -1,7 +1,7 @@
 -- Reads stg_matches, unions each match into a home row and an away row per team,
 -- then aggregates to one row per team with wins, draws, losses and win percentage.
 
-CREATE OR REPLACE TABLE `your-gcp-project-id.wfi_gold.gold_team_statistics` AS
+CREATE OR REPLACE TABLE `wfi-football-pipeline.wfi_gold.gold_team_statistics` AS
 WITH team_matches AS (
   SELECT
     home_team AS team_name,
@@ -10,7 +10,7 @@ WITH team_matches AS (
     CASE WHEN match_winner = home_team THEN 1 ELSE 0 END AS win,
     CASE WHEN match_winner = 'Draw' THEN 1 ELSE 0 END AS draw,
     CASE WHEN match_winner = away_team THEN 1 ELSE 0 END AS loss
-  FROM `your-gcp-project-id.wfi_staging.stg_matches`
+  FROM `wfi-football-pipeline.wfi_staging.stg_matches`
 
   UNION ALL
 
@@ -21,7 +21,7 @@ WITH team_matches AS (
     CASE WHEN match_winner = away_team THEN 1 ELSE 0 END AS win,
     CASE WHEN match_winner = 'Draw' THEN 1 ELSE 0 END AS draw,
     CASE WHEN match_winner = home_team THEN 1 ELSE 0 END AS loss
-  FROM `your-gcp-project-id.wfi_staging.stg_matches`
+  FROM `wfi-football-pipeline.wfi_staging.stg_matches`
 )
 
 SELECT
