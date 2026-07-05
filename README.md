@@ -10,41 +10,11 @@ The pipeline runs on a daily schedule with retries and full task history, so the
 
 The pipeline follows a standard ELT pattern with three layers inside BigQuery.
 
-```
-football-data.org API
-        |
-        | HTTP requests with API key
-        v
-Python extraction script
-        |
-        | writes 3 NDJSON files locally
-        v
-Google Cloud Storage (wfi-football-raw-data)
-    raw/worldcup_matches.ndjson
-    raw/worldcup_teams.ndjson
-    raw/worldcup_standings.ndjson
-        |
-        | GCS sensor confirms the files landed
-        v
-BigQuery raw layer (wfi_raw)
-    raw_matches, raw_teams, raw_standings
-        |
-        | SQL transformation
-        v
-BigQuery staging layer (wfi_staging)
-    stg_matches
-        |
-        | SQL aggregation
-        v
-BigQuery gold layer (wfi_gold)
-    gold_team_statistics
-    gold_competition_summary
-        |
-        v
-Dashboard / analyst queries
-```
+![WFI Pipeline Architecture](docs/wfi_architecture.svg)
 
-Three layers, three audiences:
+
+
+## Three layers, three audiences:
 
 | Layer | Dataset | Used by | Purpose |
 |---|---|---|---|
