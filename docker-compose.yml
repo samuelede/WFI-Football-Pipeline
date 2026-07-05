@@ -1,0 +1,82 @@
+x-airflow-common: &airflow-common
+  build:
+    context: .
+    dockerfile: Dockerfile.airflow
+  env_file:
+    - .env
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db/airflow
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/service_account.json
+    # BigQueryInsertJobOperator and GCSToBigQueryOperator look up an Airflow
+    # Connection object named "google_cloud_default" by default, this is separate
+    # from the GOOGLE_APPLICATION_CREDENTIALS env var above and won't exist unless
+    # declared here. With no key_path/keyfile_dict extra, the hook falls back to
+    # ADC, which picks up GOOGLE_APPLICATION_CREDENTIALS automatically.
+    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: "google-cloud-platform://?extra__google_cloud_platform__project=${GCP_PROJECT_ID}"
+    # SMTP config for EmailOperator. Values come from .env (SMTP_HOST etc).
+    # If SMTP_HOST is left blank, Airflow just won't be able to send mail,
+    # this doesn't block anything else in the pipeline from running.
+    AIRFLOW__SMTP__SMTP_HOST: ${SMTP_HOST:-}
+    AIRFLOW__SMTP__SMTP_STARTTLS: "True"
+    AIRFLOW__SMTP__SMTP_SSL: "False"
+    AIRFLOW__SMTP__SMTP_PORT: ${SMTP_PORT:-587}
+    AIRFLOW__SMTP__SMTP_USER: ${SMTP_USER:-}
+    AIRFLOW__SMTP__SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    AIRFLOW__SMTP__SMTP_MAIL_FROM: ${SMTP_MAIL_FROM:-}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./sql:/opt/airflow/sql
+    - ./scripts:/opt/airflow/scripts
+    - ./config.py:/opt/airflow/config.py
+    - ./data:/opt/airflow/data
+    # This can be a real service account key OR your Application Default Credentials
+    # file (from `gcloud auth application-default login`), just copy/rename it to
+    # service_account.json in the project root. Both are valid credential JSON.
+    - ./service_account.json:/opt/airflow/service_account.json:ro
+    - airflow-logs:/opt/airflow/logs
+  depends_on:
+    airflow-db:
+      condition: service_healthy
+
+services:
+  airflow-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+
+  airflow-init:
+    <<: *airflow-common
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - "airflow db migrate && airflow users create --username admin --password admin --firstname admin --lastname admin --role Admin --email admin@example.com"
+
+  airflow-webserver:
+    <<: *airflow-common
+    command: webserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+  airflow-scheduler:
+    <<: *airflow-common
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+
+volumes:
+  airflow-db-data:
+  airflow-logs:
