@@ -13,12 +13,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from extract_football_data import run_extraction
 from gcs_upload import run_upload
+from config import GCP_PROJECT_ID, GCS_BUCKET_NAME, RAW_DATASET
 
-# Update these two values to match your GCP project before running the DAG
-PROJECT_ID = "wfi-football-pipeline"
-BUCKET_NAME = "wfi-football-raw-data"
-
-RAW_DATASET = "wfi_raw"
+# Pulled from config.py / .env, one place to set these instead of a placeholder
+# string to remember to replace in every DAG and SQL file.
+PROJECT_ID = GCP_PROJECT_ID
+BUCKET_NAME = GCS_BUCKET_NAME
 GCP_CONN_ID = "google_cloud_default"
 
 default_args = {

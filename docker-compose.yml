@@ -15,6 +15,16 @@ x-airflow-common: &airflow-common
     # declared here. With no key_path/keyfile_dict extra, the hook falls back to
     # ADC, which picks up GOOGLE_APPLICATION_CREDENTIALS automatically.
     AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: "google-cloud-platform://?extra__google_cloud_platform__project=${GCP_PROJECT_ID}"
+    # SMTP config for EmailOperator. Values come from .env (SMTP_HOST etc).
+    # If SMTP_HOST is left blank, Airflow just won't be able to send mail,
+    # this doesn't block anything else in the pipeline from running.
+    AIRFLOW__SMTP__SMTP_HOST: ${SMTP_HOST:-}
+    AIRFLOW__SMTP__SMTP_STARTTLS: "True"
+    AIRFLOW__SMTP__SMTP_SSL: "False"
+    AIRFLOW__SMTP__SMTP_PORT: ${SMTP_PORT:-587}
+    AIRFLOW__SMTP__SMTP_USER: ${SMTP_USER:-}
+    AIRFLOW__SMTP__SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+    AIRFLOW__SMTP__SMTP_MAIL_FROM: ${SMTP_MAIL_FROM:-}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./sql:/opt/airflow/sql
