@@ -34,8 +34,6 @@ The gold layer feeds a Looker Studio report with team performance, match detail,
  
 **Live dashboard:** [View the report on Looker Studio](https://datastudio.google.com/reporting/d5c90a8a-3aca-4555-9f17-82ea61116881/page/qs52F)
  
-*(Replace the image above with an actual screenshot saved to `docs/looker_studio_dashboard.png`, and swap the link for your report's real share URL from **File → Share → Publish and embed** or the direct sharable link. If the report is set to "Anyone with the link," viewers won't need a Google login to see it.)*
-
 ## Project Structure
  
 ```
