@@ -26,6 +26,12 @@ GCS sits between the API and BigQuery deliberately. If the BigQuery load step fa
 
 Two Airflow DAGs drive the pipeline. The ingestion DAG extracts data, uploads it to GCS, waits for the files to exist, then loads them into the three raw tables. On success it triggers the transform DAG, which runs the staging query first and then the two gold queries in parallel.
 
+## DAG Run Success
+ 
+Both DAGs completing end to end, ingestion through the full transform layer (staging, data quality check, all gold tables, and the scorers/player-stats branch):
+ 
+![Airflow DAG Run Success](docs/wfi_airflow_dag_run_success.png)
+
 ## Dashboard
  
 The gold layer feeds a Looker Studio report with team performance, match detail, and trend pages, built on top of `gold_team_statistics`, `gold_competition_summary`, `gold_match_results`, and `gold_team_match_log`.
