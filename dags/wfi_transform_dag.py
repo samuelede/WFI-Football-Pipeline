@@ -121,7 +121,23 @@ with DAG(
         gcp_conn_id=GCP_CONN_ID,
     )
 
-    gold_tasks = [create_gold_team_stats, create_gold_competition_summary, create_gold_match_results]
+    create_gold_team_match_log = BigQueryInsertJobOperator(
+        task_id="create_gold_team_match_log",
+        configuration={
+            "query": {
+                "query": read_sql("create_gold_team_match_log.sql"),
+                "useLegacySql": False,
+            }
+        },
+        gcp_conn_id=GCP_CONN_ID,
+    )
+
+    gold_tasks = [
+        create_gold_team_stats,
+        create_gold_competition_summary,
+        create_gold_match_results,
+        create_gold_team_match_log,
+    ]
 
     # Only added if ALERT_EMAIL_TO is set in .env, so the DAG doesn't break for
     # anyone who hasn't configured SMTP yet.
