@@ -77,6 +77,15 @@ with DAG(
         poke_interval=15,
     )
 
+    sense_scorers = GCSObjectExistenceSensor(
+        task_id="sense_scorers_file",
+        bucket=BUCKET_NAME,
+        object="raw/worldcup_scorers.ndjson",
+        google_cloud_conn_id=GCP_CONN_ID,
+        timeout=300,
+        poke_interval=15,
+    )
+
     load_matches = GCSToBigQueryOperator(
         task_id="load_raw_matches",
         bucket=BUCKET_NAME,
@@ -110,14 +119,26 @@ with DAG(
         gcp_conn_id=GCP_CONN_ID,
     )
 
+    load_scorers = GCSToBigQueryOperator(
+        task_id="load_raw_scorers",
+        bucket=BUCKET_NAME,
+        source_objects=["raw/worldcup_scorers.ndjson"],
+        destination_project_dataset_table=f"{PROJECT_ID}.{RAW_DATASET}.raw_scorers",
+        source_format="NEWLINE_DELIMITED_JSON",
+        write_disposition="WRITE_TRUNCATE",
+        autodetect=True,
+        gcp_conn_id=GCP_CONN_ID,
+    )
+
     trigger_transform = TriggerDagRunOperator(
         task_id="trigger_transform_dag",
         trigger_dag_id="wfi_football_transform_dag",
     )
 
     extract_task >> upload_task
-    upload_task >> [sense_matches, sense_teams, sense_standings]
+    upload_task >> [sense_matches, sense_teams, sense_standings, sense_scorers]
     sense_matches >> load_matches
     sense_teams >> load_teams
     sense_standings >> load_standings
-    [load_matches, load_teams, load_standings] >> trigger_transform
+    sense_scorers >> load_scorers
+    [load_matches, load_teams, load_standings, load_scorers] >> trigger_transform
