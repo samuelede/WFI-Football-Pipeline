@@ -34,7 +34,6 @@ The gold layer feeds a Looker Studio report with team performance, match detail,
  
 **Live dashboard:** [View the report on Looker Studio](https://datastudio.google.com/reporting/d5c90a8a-3aca-4555-9f17-82ea61116881/page/qs52F)
  
-
 ## Project Structure
  
 ```
