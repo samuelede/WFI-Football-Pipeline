@@ -83,6 +83,17 @@ with DAG(
         gcp_conn_id=GCP_CONN_ID,
     )
 
+    create_staging_scorers = BigQueryInsertJobOperator(
+        task_id="create_staging_scorers",
+        configuration={
+            "query": {
+                "query": read_sql("create_staging_scorers.sql"),
+                "useLegacySql": False,
+            }
+        },
+        gcp_conn_id=GCP_CONN_ID,
+    )
+
     validate_staging_row_count = PythonOperator(
         task_id="validate_staging_row_count",
         python_callable=check_staging_row_count,
@@ -132,12 +143,28 @@ with DAG(
         gcp_conn_id=GCP_CONN_ID,
     )
 
-    gold_tasks = [
+    create_gold_player_stats = BigQueryInsertJobOperator(
+        task_id="create_gold_player_stats",
+        configuration={
+            "query": {
+                "query": read_sql("create_gold_player_stats.sql"),
+                "useLegacySql": False,
+            }
+        },
+        gcp_conn_id=GCP_CONN_ID,
+    )
+
+    # Match-based gold tables go through the staging row-count gate.
+    # Player stats is an independent lineage (raw_scorers -> stg_scorers), it
+    # doesn't depend on stg_matches, so it's wired separately rather than
+    # forced through the same gate.
+    match_gold_tasks = [
         create_gold_team_stats,
         create_gold_competition_summary,
         create_gold_match_results,
         create_gold_team_match_log,
     ]
+    all_gold_tasks = match_gold_tasks + [create_gold_player_stats]
 
     # Only added if ALERT_EMAIL_TO is set in .env, so the DAG doesn't break for
     # anyone who hasn't configured SMTP yet.
@@ -150,15 +177,18 @@ with DAG(
             <h3>WFI Football Data Pipeline</h3>
             <p>The daily ingestion and transform run completed successfully.</p>
             <p>Gold layer tables (<code>gold_team_statistics</code>,
-            <code>gold_competition_summary</code>, <code>gold_match_results</code>)
+            <code>gold_competition_summary</code>, <code>gold_match_results</code>,
+            <code>gold_team_match_log</code>, <code>gold_player_stats</code>)
             are refreshed and ready for query.</p>
             <p>Run: {{ dag_run.run_id }}<br>Completed: {{ ts }}</p>
             """,
             trigger_rule="all_success",
         )
         create_staging_matches >> validate_staging_row_count
-        validate_staging_row_count >> gold_tasks
-        gold_tasks >> notify_success
+        validate_staging_row_count >> match_gold_tasks
+        create_staging_scorers >> create_gold_player_stats
+        all_gold_tasks >> notify_success
     else:
         create_staging_matches >> validate_staging_row_count
-        validate_staging_row_count >> gold_tasks
+        validate_staging_row_count >> match_gold_tasks
+        create_staging_scorers >> create_gold_player_stats

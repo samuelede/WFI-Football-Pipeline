@@ -12,6 +12,7 @@ FILES_TO_UPLOAD = [
     "worldcup_matches.ndjson",
     "worldcup_teams.ndjson",
     "worldcup_standings.ndjson",
+    "worldcup_scorers.ndjson",
 ]
 
 

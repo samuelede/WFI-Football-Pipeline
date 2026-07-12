@@ -39,6 +39,7 @@ The gold layer feeds a Looker Studio report with team performance, match detail,
 ```
 wfi-football-pipeline/
 ├── README.md
+├── LICENSE
 ├── requirements.txt              # pinned dependencies for the local venv
 ├── requirements-airflow.txt      # dependencies installed inside the Airflow image
 ├── .env.example                  # template for your local .env file
@@ -47,7 +48,7 @@ wfi-football-pipeline/
 ├── Dockerfile.airflow            # custom Airflow image with the Google provider
 ├── docker-compose.yml            # starts the 4 Airflow services
 ├── scripts/
-│   ├── extract_football_data.py  # calls the API, writes NDJSON files
+│   ├── extract_football_data.py  # calls the API, writes NDJSON files (matches, teams, standings, scorers)
 │   ├── gcs_upload.py             # uploads NDJSON files to GCS
 │   └── run_pipeline.sh           # one-command start: build, boot, validate, trigger
 ├── dags/
@@ -55,10 +56,12 @@ wfi-football-pipeline/
 │   └── wfi_transform_dag.py      # runs the SQL files below, plus data quality check and email alert
 ├── sql/
 │   ├── create_staging_matches.sql
+│   ├── create_staging_scorers.sql
 │   ├── create_gold_team_stats.sql
 │   ├── create_gold_competition_summary.sql
 │   ├── create_gold_match_results.sql
-│   └── create_gold_team_match_log.sql
+│   ├── create_gold_team_match_log.sql
+│   └── create_gold_player_stats.sql
 ├── docs/
 │   ├── wfi_architecture.drawio   # editable source for the architecture diagram
 │   ├── wfi_architecture.svg      # rendered diagram, embedded in this README
@@ -279,16 +282,21 @@ Re-trigger `wfi_football_ingestion_dag` from scratch to simulate a fresh daily r
 |---|---|
 | `.env` | Stores secrets and config, read by `config.py` at runtime, never committed |
 | `config.py` | Loads `.env` and exposes the values used across every script and DAG |
-| `scripts/extract_football_data.py` | Calls the three API endpoints and writes NDJSON files to `data/raw/` |
+| `scripts/extract_football_data.py` | Calls the four API endpoints (matches, teams, standings, scorers) and writes NDJSON files to `data/raw/` |
 | `scripts/gcs_upload.py` | Uploads the NDJSON files to the GCS bucket |
+| `scripts/run_pipeline.sh` | One-command startup: builds, boots, validates DAGs parsed cleanly, unpauses, triggers |
 | `dags/wfi_ingestion_dag.py` | Extract, upload, sense, load into `wfi_raw`, then trigger the transform DAG |
-| `dags/wfi_transform_dag.py` | Runs the three SQL files, a data quality row-count check, and an optional email alert |
+| `dags/wfi_transform_dag.py` | Runs the SQL files below, a data quality row-count check, and an optional email alert |
 | `sql/create_staging_matches.sql` | Cleans `raw_matches`, derives match winner and total goals, writes `stg_matches` |
+| `sql/create_staging_scorers.sql` | Flattens `raw_scorers`, writes `stg_scorers` (player, team, goals, assists, penalties) |
 | `sql/create_gold_team_stats.sql` | Unions home and away rows per team, aggregates wins, goals and win rate |
 | `sql/create_gold_competition_summary.sql` | Aggregates total matches, total goals and draws per competition |
 | `sql/create_gold_match_results.sql` | Full match detail sorted by date, feeds the Looker Studio table view |
+| `sql/create_gold_team_match_log.sql` | Unpivots home/away into one row per team per match, single `team_name` join key for blending |
+| `sql/create_gold_player_stats.sql` | Top scorers and assists per player, sourced from `stg_scorers` |
 | `docker-compose.yml` | Defines the four Airflow services |
 | `Dockerfile.airflow` | Extends the base Airflow image with the Google provider package |
+| `LICENSE` | MIT License text |
  
 ## Common Errors
  
@@ -466,3 +474,15 @@ This project was built as a personal data engineering exercise, but suggestions 
 4. Test any DAG changes locally with `docker compose up -d --build` before opening a pull request.
 5. Open a pull request with a short description of what changed and why.
 Bug reports and questions are also welcome through the issues tab.
+
+## Future Recommendations
+ 
+Ideas that came up during development but aren't implemented, either out of scope for now or blocked by a real data source limitation:
+ 
+- **Top saves / goalkeeper stats.** football-data.org does not expose goalkeeper data (saves, clean sheets) on any tier, `gold_player_stats` currently covers goals and assists only, sourced from the `/scorers` endpoint. Adding saves would mean integrating a second data provider (e.g. API-Football, Opta, StatsBomb), each with its own auth, rate limits, and likely a paid tier, a genuine scope expansion rather than a config change.
+- GitHub Actions CI/CD for the GCP Compute Engine deployment, using Workload Identity Federation instead of a static service account key, so deploys don't depend on a long-lived credential sitting in GitHub Secrets or on the VM.
+- Restricting the Compute Engine firewall rule to a specific IP range (or fronting the Airflow UI with GCP Identity-Aware Proxy) rather than open ingress on port 8080, if the VM deployment extension is used beyond a quick demo.
+- A `gold_match_results` extension covering multiple competitions at once, filterable by competition/season, rather than the current single-competition scope driven by `COMPETITION_CODE`.
+## License
+ 
+This project is licensed under the MIT License, see the [LICENSE](LICENSE) file for details.

@@ -20,6 +20,7 @@ ENDPOINTS = {
     "matches": f"/competitions/{COMPETITION_CODE}/matches",
     "teams": f"/competitions/{COMPETITION_CODE}/teams",
     "standings": f"/competitions/{COMPETITION_CODE}/standings",
+    "scorers": f"/competitions/{COMPETITION_CODE}/scorers",
 }
 
 
@@ -54,6 +55,17 @@ def extract_standings():
     return data.get("standings", [])
 
 
+def extract_scorers():
+    """
+    Top scorers and assists for the competition, from a separate endpoint to the
+    other three. football-data.org does not expose goalkeeper/saves data on any
+    tier, so this covers goals and assists only, see the README's Future
+    Recommendations section for the saves gap.
+    """
+    data = call_api(ENDPOINTS["scorers"])
+    return data.get("scorers", [])
+
+
 def write_ndjson(records, filename):
     """Write a list of dicts to a newline delimited JSON file, one record per line."""
     output_dir = Path(LOCAL_DATA_DIR)
@@ -75,11 +87,13 @@ def run_extraction():
     matches = extract_matches()
     teams = extract_teams()
     standings = extract_standings()
+    scorers = extract_scorers()
 
     return {
         "matches": write_ndjson(matches, "worldcup_matches.ndjson"),
         "teams": write_ndjson(teams, "worldcup_teams.ndjson"),
         "standings": write_ndjson(standings, "worldcup_standings.ndjson"),
+        "scorers": write_ndjson(scorers, "worldcup_scorers.ndjson"),
     }
 
 
