@@ -100,7 +100,7 @@ gcloud --version
  
 ```bash
 gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
+gcloud config set project wfi-football-pipeline
 ```
  
 **3. Enable the required APIs**
@@ -118,15 +118,15 @@ gcloud services enable compute.googleapis.com
 **4. Create the GCS bucket**
  
 ```bash
-gcloud storage buckets create gs://wfi-football-raw-data --project=YOUR_PROJECT_ID --location=US
+gcloud storage buckets create gs://wfi-football-raw-data --project=wfi-football-pipeline --location=US
 ```
  
 **5. Create the three BigQuery datasets**
  
 ```bash
-bq mk --dataset --location=US YOUR_PROJECT_ID:wfi_raw
-bq mk --dataset --location=US YOUR_PROJECT_ID:wfi_staging
-bq mk --dataset --location=US YOUR_PROJECT_ID:wfi_gold
+bq mk --dataset --location=US wfi-football-pipeline:wfi_raw
+bq mk --dataset --location=US wfi-football-pipeline:wfi_staging
+bq mk --dataset --location=US wfi-football-pipeline:wfi_gold
 ```
  
 **6. Set up authentication for the pipeline**
@@ -137,42 +137,42 @@ Try a real service account key first:
 gcloud iam service-accounts create wfi-pipeline-sa \
   --display-name="WFI Football Pipeline Service Account"
  
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:wfi-pipeline-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding wfi-football-pipeline \
+  --member="serviceAccount:wfi-pipeline-sa@wfi-football-pipeline.iam.gserviceaccount.com" \
   --role="roles/storage.objectViewer"
  
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:wfi-pipeline-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding wfi-football-pipeline \
+  --member="serviceAccount:wfi-pipeline-sa@wfi-football-pipeline.iam.gserviceaccount.com" \
   --role="roles/bigquery.jobUser"
  
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:wfi-pipeline-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding wfi-football-pipeline \
+  --member="serviceAccount:wfi-pipeline-sa@wfi-football-pipeline.iam.gserviceaccount.com" \
   --role="roles/bigquery.dataEditor"
  
 gcloud iam service-accounts keys create service_account.json \
-  --iam-account=wfi-pipeline-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
+  --iam-account=wfi-pipeline-sa@wfi-football-pipeline.iam.gserviceaccount.com
 ```
  
 **If that fails with "Service account key creation is disabled"** (common on free-credits accounts under an org policy), use Application Default Credentials instead:
  
 ```bash
 gcloud auth application-default login
-gcloud auth application-default set-quota-project YOUR_PROJECT_ID
+gcloud auth application-default set-quota-project wfi-football-pipeline
  
 # Mac/Linux
 cp ~/.config/gcloud/application_default_credentials.json service_account.json
 # Windows PowerShell
 copy $env:APPDATA\gcloud\application_default_credentials.json service_account.json
  
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+gcloud projects add-iam-policy-binding wfi-football-pipeline \
   --member="user:your-email@gmail.com" \
   --role="roles/storage.objectViewer"
  
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+gcloud projects add-iam-policy-binding wfi-football-pipeline \
   --member="user:your-email@gmail.com" \
   --role="roles/bigquery.jobUser"
  
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+gcloud projects add-iam-policy-binding wfi-football-pipeline \
   --member="user:your-email@gmail.com" \
   --role="roles/bigquery.dataEditor"
 ```
@@ -411,7 +411,7 @@ Requirements: `gcloud` CLI (already installed from the setup section above), Com
 2. Create a VM with Docker pre-installed via Container-Optimized OS is tempting but fights Compose, a plain Debian/Ubuntu image with Docker installed via startup script is simpler to reason about:
 ```bash
    gcloud compute instances create wfi-airflow-vm \
-     --project=YOUR_PROJECT_ID \
+     --project=wfi-football-pipeline \
      --zone=us-central1-a \
      --machine-type=e2-medium \
      --image-family=debian-12 \
